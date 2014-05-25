@@ -1,2 +1,2 @@
-<tr><td colspan='2'>The <%FEW%> newest replies are shown below.<br>
-<a href="<%READ%>">Read this thread from the beginning</a></td></tr>
+<tr><td colspan='2'><br>The <%FEW%> newest replies are shown above.<br>
+<a href="<%READ%>">Read this thread from the beginning</a><br><br></td></tr>
