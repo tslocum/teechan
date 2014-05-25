@@ -1,0 +1,16 @@
+<html><head><title><%BOARDNAME%></title>
+<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">
+<%ENCODING%>
+<link rel="stylesheet" href="<%FORUMURL%>skin/2ch/style.css">
+<script type="text/javascript">function quote(b,a) { var
+v=eval("document."+a+".mesg"); v.value+=">>"+b+"\n"; v.focus() }</script>
+</head>
+<base href="<%FORUMURL%>">
+<body class="board">
+<table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#CCFFCC" align="center" class="mono"><tr><td><table align="center" border="0"><tr><td>
+<h1 align="center"><%BOARDNAME%></h1>
+</td></tr></table></td></table><br>
+
+<table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#CCFFCC" align="center"><tr><td><table><tr><th><%POST%></th>
+<th width="100%">Thread</th><th nowrap>Author</th><th nowrap>Posts</th><th nowrap>Last Post</th></tr>
+

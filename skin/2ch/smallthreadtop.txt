@@ -1,0 +1,3 @@
+<%STARTFORM%>
+<table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#EFEFEF" align="center"><tr><td style="padding: 7px;padding-top: 2px;">
+<table cellspacing="0" cellpadding="0">&nbsp;<font size="5" color="#FF0000"><%THREADNAME%></font><br><br>

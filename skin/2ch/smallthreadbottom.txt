@@ -1,0 +1,3 @@
+<tr><td class="number mono" width="1%"><a><%NUMPOSTS%></a></td>
+<td class="textarea"><%TEXTAREA%></td></tr></table></form>
+</table></td></tr></table><br>

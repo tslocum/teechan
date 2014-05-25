@@ -1,0 +1,2 @@
+</table></td></tr></table>
+<table><tr><td><table><tr><td><%HEADTXT%></td></tr></table></td></tr></table>

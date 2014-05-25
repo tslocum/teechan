@@ -1,0 +1,80 @@
+body {
+    font-family: Verdana, Tahoma, sans-serif;
+    background-color: #EFEFEF;
+}
+
+body.board {
+    background-image: url(ba.gif);
+}
+
+dd {
+    margin: 0.5em;
+    margin-left: 1.5em;
+    font-family: Mona, 'MS PGothic' !important;
+}
+
+.mono {
+    font-family: Mona, 'MS PGothic' !important;
+}
+
+td, th {
+    vertical-align: top
+}
+
+.oddid td, .evenid td {
+    font-size: x-small;
+    border-bottom: 1px solid #ccc
+}
+
+.add {
+    font-weight: normal
+}
+
+.add span {
+    font-size: x-small
+}
+
+.oddid td {
+    background: #DFDFDF
+}
+
+.evenid td, .threads td {
+    background: #F1F1F1
+}
+
+.foot {
+    text-align: center;
+    font-size: x-small
+}
+
+.threads {
+    font-size: small
+}
+
+.fpthread {
+    background: #ffffff
+}
+
+a.unstyled:link {
+    text-decoration: none;
+    color: inherit;
+}
+
+a.unstyled:visited {
+    text-decoration: none;
+    color: inherit;
+}
+
+a.unstyled:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+a.unstyled:active {
+    text-decoration: none;
+    color: inherit;
+}
+
+.textarea {
+    padding-left: 0.5em;
+}
