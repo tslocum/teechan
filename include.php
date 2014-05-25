@@ -6,11 +6,205 @@
  * Basic includes
  */
 
-// ABBC BBCode processor.
-include('abbc/abbc.lib.php');
+require 'settings.php';
+require 'passwordcompat.php';
+require 'abbc/abbc.lib.php'; // ABBC BBCode processor.
 
 // current version (int)
 $teeversion = 6900;
+
+if (!defined('PDO::ATTR_DRIVER_NAME')) {
+    fancyDie("PDO isn't installed!  It is installed by default in PHP 5.1.0 and newer, you should upgrade your PHP version.  You can install PDO manually by running the command: <b>pear install pdo</b>");
+}
+
+try {
+    $tee_db = new PDO(TEE_PDODSN, TEE_PDOUSER, TEE_PDOPASS, array(PDO::ATTR_EMULATE_PREPARES => false, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+} catch (PDOException $ex) {
+    fancyDie("Unable to connect to the database!  Have you configured settings.php properly?<br><br>Error: " . $ex->getMessage());
+}
+
+// Report fatal errors.
+function fancyDie($m) {
+    global $teeversion;
+    ?>
+    <title>Fatal Error</title>
+    <style type="text/css">
+        #logo {
+            float: right;
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            z-index: 999;
+        }
+
+        * {
+            font-family: Tahoma, sans-serif
+        }
+    </style>
+    <link rel="stylesheet" href="skin/2ch/style.css">
+    <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#CCFFCC" align="center" class="mono">
+    <tr>
+        <td>
+            <h1>Fatal error!</h1>
+
+            <div id="logo"><a href="https://github.com/tslocum/teechan"><img src="logo.png" id="logo"
+                                                                             title="Powered by teechan"></a></div>
+            <?= $m ?>
+            <?php if (isset($_POST['mesg'])) {
+                echo '<hr>' . $_POST['mesg'];
+            } ?>
+            <hr>
+            Powered by teechan <?= $teeversion ?>
+        </td>
+    </tr></table><?php exit;
+}
+
+function teeHashPassword($password) {
+    return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+}
+
+function newLoginKey() {
+    $characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    $string = '';
+    for ($i = 0; $i < 75; $i++) {
+        $string .= $characters[rand(0, strlen($characters) - 1)];
+    }
+
+    return $string;
+}
+
+function checkCredentials($username, $password) {
+    global $tee_db;
+
+    $account = accountByUsername($username);
+    if (is_array($account)) {
+        if (password_verify($password, $account['password'])) {
+            return $account;
+        }
+
+        return 1; // Bad password
+    }
+
+    return 2; // Bad username
+}
+
+function checkLoginKey($username, $loginkey) {
+    global $tee_db;
+
+    $stmt = $tee_db->prepare("SELECT * FROM accounts WHERE username=:username AND loginkey=:loginkey LIMIT 1");
+    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+    $stmt->bindValue(':loginkey', $loginkey, PDO::PARAM_STR);
+    $stmt->execute();
+    $accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($accounts as $account) {
+        return $account;
+    }
+
+    return 3; // Bad username/key
+}
+
+function accountByUsername($username) {
+    global $tee_db;
+
+    $stmt = $tee_db->prepare("SELECT * FROM accounts WHERE username=:username LIMIT 1");
+    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+    $stmt->execute();
+    $accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($accounts as $account) {
+        return $account;
+    }
+
+    return false; // No such account
+}
+
+function allAccounts() {
+    global $tee_db;
+
+    $stmt = $tee_db->query("SELECT * FROM accounts ORDER BY level DESC");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function allBans() {
+    global $tee_db;
+
+    $stmt = $tee_db->query("SELECT * FROM bans ORDER BY at DESC");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function updateAccountLevel($username, $level) {
+    global $tee_db;
+
+    $stmt = $tee_db->prepare("UPDATE accounts SET level=:level WHERE username=:username LIMIT 1");
+    $stmt->bindValue(':level', intval($level), PDO::PARAM_INT);
+    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+    $stmt->execute();
+}
+
+function updateAccountPassword($username, $password) {
+    global $tee_db;
+
+    $stmt = $tee_db->prepare("UPDATE accounts SET password=:password,loginkey=:loginkey WHERE username=:username LIMIT 1");
+    $stmt->bindValue(':password', teeHashPassword($password), PDO::PARAM_STR);
+    $stmt->bindValue(':loginkey', newLoginKey(), PDO::PARAM_STR);
+    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+    $stmt->execute();
+}
+
+function updateAccountCapcode($username, $capcode) {
+    global $tee_db;
+
+    $stmt = $tee_db->prepare("UPDATE accounts SET capcode=:capcode WHERE username=:username LIMIT 1");
+    $stmt->bindValue(':capcode', $capcode, PDO::PARAM_STR);
+    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+    $stmt->execute();
+}
+
+function addAccount($username, $password, $level) {
+    global $tee_db, $myaccount;
+
+    $stmt = $tee_db->prepare("INSERT INTO accounts(username,password,loginkey,addedby,added,level) VALUES(:username,:password,:loginkey,:addedby,:added,:level)");
+    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+    $stmt->bindValue(':password', teeHashPassword($password), PDO::PARAM_STR);
+    $stmt->bindValue(':loginkey', newLoginKey(), PDO::PARAM_STR);
+    $stmt->bindValue(':addedby', (is_array($myaccount) ? intval($myaccount['id']) : 0), PDO::PARAM_INT);
+    $stmt->bindValue(':added', time(), PDO::PARAM_INT);
+    $stmt->bindValue(':level', intval($level), PDO::PARAM_INT);
+    $stmt->execute();
+}
+
+function checkMohel($name, $trip) {
+    global $tee_db;
+
+    $stmt = $tee_db->prepare("SELECT COUNT(*) FROM mohel WHERE mohel=:mohel LIMIT 1");
+
+    $stmt->bindValue(':mohel', $name, PDO::PARAM_STR);
+    $stmt->execute();
+    if (intval($stmt->fetchColumn()) > 0) {
+        return true;
+    }
+
+    $stmt->bindValue(':mohel', $name . '#' . $trip, PDO::PARAM_STR);
+    $stmt->execute();
+    if (intval($stmt->fetchColumn()) > 0) {
+        return true;
+    }
+
+    $stmt->bindValue(':mohel', '#' . $trip, PDO::PARAM_STR);
+    $stmt->execute();
+    if (intval($stmt->fetchColumn()) > 0) {
+        return true;
+    }
+
+    return false;
+}
+
+function deleteAccountByUsername($username) {
+    global $tee_db;
+
+    $stmt = $tee_db->prepare("DELETE FROM accounts WHERE username=:username LIMIT 1");
+    $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+    $stmt->execute();
+}
 
 function icons($i, $threadicon) {
     global $setting;
@@ -242,25 +436,4 @@ function RebuildThreadList($bbs, $thisid, $sage, $rmthread) {
     $bottom = str_replace("<%TEEVERSION%>", $teeversion, $bottom);
     fputs($f, $bottom);
     fclose($f);
-}
-
-function SecureSalt() {
-    $salt = "LOLLOLOLOLOLOLOLOLOLOLOLOLOLOLOL"; #this is ONLY used if the host doesn't have openssl
-    #I don't know a better way to get random data
-    if (file_exists("salt.cgi")) { #already generated a key
-        $fd = fopen("salt.cgi", "r");
-        $fstats = fstat($fd);
-        $salt = fread($fd, $fstats[size]);
-        fclose($fd);
-    } else {
-        system("openssl rand 448 > salt.cgi", $err);
-        if ($err === 0) {
-            chmod("salt.cgi", 0400);
-            $fd = fopen("salt.cgi", "r");
-            $fstats = fstat($fp);
-            $salt = fread($fd, $fstats[size]);
-            fclose($fd);
-        }
-    }
-    return $salt;
 }

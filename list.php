@@ -7,7 +7,7 @@ function icons($i, $threadicon) {
 
 if (!$_GET[bbs]) die("Specify a BBS, please.");
 $_GET[bbs] = htmlspecialchars($_GET[bbs]);
-$glob = file("globalsettings.txt") or fancydie("Eh? Couldn't fetch the global settings file?!");
+$glob = file("globalsettings.txt") or fancyDie("Eh? Couldn't fetch the global settings file?!");
 foreach ($glob as $tmp) {
     $tmp = trim($tmp);
     list ($name, $value) = explode("=", $tmp);

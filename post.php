@@ -16,7 +16,7 @@ $_COOKIE = array_map("htmlspecialquotes", $_COOKIE);
 // Generate the date
 $thisverysecond = time();
 
-$glob = file("globalsettings.txt") or fancydie("Eh? Couldn't fetch the global settings file?!");
+$glob = file("globalsettings.txt") or fancyDie("Eh? Couldn't fetch the global settings file?!");
 foreach ($glob as $tmp) {
     $tmp = trim($tmp);
     list ($name, $value) = explode("=", $tmp);
@@ -75,7 +75,7 @@ if ($_GET[shiichan] == "writenew") {
     $html = str_replace("<%FORUMNAME%>", $setting[forumname], $html);
     $html = str_replace("<%BOARDNAME%>", $setting[boardname], $html);
     $html = str_replace("<%BOARDURL%>", $_GET[bbs], $html);
-    if ($_COOKIE[adminname]) $html = str_replace("<%NAMECOOKIE%>", "value='$_COOKIE[adminname]'", $html); else $html = str_replace("<%NAMECOOKIE%>", "", $html);
+    if ($_COOKIE[teeaccname]) $html = str_replace("<%NAMECOOKIE%>", "value='$_COOKIE[teeaccname]'", $html); else $html = str_replace("<%NAMECOOKIE%>", "", $html);
     if ($setting[adminsonly]) $html = str_replace("<%ADMINSONLY%>", "<h2 style='background:none;color:red'>Only administrators can post threads to this forum!</h2>", $html); else $html = str_replace("<%ADMINSONLY%>", "", $html);
     $html = str_replace("<%STARTFORM%>", "<form name='post' action='post.php' method='POST'><input type='hidden' name='bbs' value='$_GET[bbs]'><input type='hidden' name='id' value='$second'><input type='hidden' name='shiichan' value='proper'>", $html);
     $html = str_replace("<%TEXTAREA%>", "<textarea rows='15' cols='75' name='mesg'></textarea><br><input type='submit' value='Create Thread'>", $html);
@@ -85,10 +85,10 @@ if ($_GET[shiichan] == "writenew") {
 
 // If we're being called to write an advanced reply, write the advanced reply dammit.
 if ($_GET[id]) {
-    $thread = file("$_GET[bbs]/dat/$_GET[id].dat") or fancydie("Couldn't open that thread");
+    $thread = file("$_GET[bbs]/dat/$_GET[id].dat") or fancyDie("Couldn't open that thread");
     list ($threadname, $author, $lastposted) = explode("<=>", $thread[0]);
     $html = file_get_contents("skin/$setting[skin]/addreply.txt");
-    if ($_COOKIE[adminname]) $html = str_replace("<%NAMECOOKIE%>", "value='$_COOKIE[adminname]'", $html); else $html = str_replace("<%NAMECOOKIE%>", "", $html);
+    if ($_COOKIE[teeaccname]) $html = str_replace("<%NAMECOOKIE%>", "value='$_COOKIE[teeaccname]'", $html); else $html = str_replace("<%NAMECOOKIE%>", "", $html);
     if (!is_writable("$_GET[bbs]/dat/$_GET[id].dat")) $html = str_replace("<%THREADSTOPPED%>", "<h3>This thread is threadstopped!!</h3>", $html); else $html = str_replace("<%THREADSTOPPED%>", "", $html);
     $html = str_replace("<%THREADNAME%>", $threadname, $html);
     $html = str_replace("<%FORUMNAME%>", $setting[forumname], $html);
@@ -114,36 +114,12 @@ if ($_GET[id]) {
 $file = @file("bans.cgi");
 if ($file) foreach ($file as $line) {
     list ($ip, $reason, $unused, $unused) = explode("<>", $line);
-    if (strstr($_SERVER[REMOTE_ADDR], $ip)) fancydie("<b>You have been banned from this message board.</b><p>The moderation team supplied this reason: <b>$reason</b>");
+    if (strstr($_SERVER[REMOTE_ADDR], $ip)) fancyDie("<b>You have been banned from this message board.</b><p>The moderation team supplied this reason: <b>$reason</b>");
 }
 
 // check for flood
 $file = @file_get_contents("temp/$_SERVER[REMOTE_ADDR].flood");
-if ($file) if ($file + 5 > time()) fancydie("Please wait at least 5 seconds between posts!<p>You may have recieved this message from submitting your post more than once. Don't submit it again.");
-
-// Report fatal errors.
-function fancydie($m) {
-    global $setting, $teeversion;
-    ?>
-    <title>Fatal Error</title>
-    <style type="text/css">img {
-            float: right
-        }
-
-        * {
-            font-family: Tahoma, sans-serif
-        }</style>
-    <link rel="stylesheet" href="<?php echo $setting[urltoforum]; ?>skin/2ch/style.css">
-    <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#CCFFCC" align="center" class="mono">
-    <tr>
-        <td>
-            <h1>VIP transmission error!</h1><?= $m ?>
-            <hr><?= $_POST[mesg] ?>
-            <hr>
-            Powered by teechan <?= $teeversion ?>
-        </td>
-    </tr></table><?php exit;
-}
+if ($file) if ($file + 5 > time()) fancyDie("Please wait at least 5 seconds between posts!<p>You may have recieved this message from submitting your post more than once. Don't submit it again.");
 
 // ENT_QUOTES thingy
 function htmlspecialquotes($st) {
@@ -172,7 +148,7 @@ function shorten($str){
 
 // Check for POST and no in-forums spoofing
 if ($_SERVER[REQUEST_METHOD] != "POST") {
-    fancydie("Trying to GET post.php?<meta http-equiv='refresh' content='0;url=.'>");
+    fancyDie("Trying to GET post.php?<meta http-equiv='refresh' content='0;url=.'>");
 }
 
 // for capcode functions
@@ -181,26 +157,30 @@ $loggedin = false;
 
 ###################
 // capcode post
-if ($_POST[pass]) {
-    $admin = file("shadow.cgi");
-    foreach ($admin as $line) {
-        list($name, $pass, $level) = explode("<>", $line);
-        if (strtolower($_POST[name]) == $name) {
-            if (md5($_POST[pass]) != $pass) fancydie("The password you supplied for that username is incorrect.");
-            $loggedin = true;
-            break;
-        }
+if ($_POST['pass']) {
+    $account = checkCredentials($_POST['name'], $_POST['pass']);
+    if (is_array($account)) {
+        $loggedin = true;
+    } else if ($account == 1) {
+        fancyDie("The password you supplied for that account name is incorrect.");
     }
-    if ($loggedin == false) fancydie("You gave a password but your name doesn't match any registered user.");
-    $fdc = @file_get_contents("capcodes/$name.txt");
-    if ($fdc) $_POST[name] = "<b>" . $fdc . "</b>"; else
-        $_POST[name] = "<b style='color:#f00'>$name</b>";
+
+    if (!$loggedin) {
+        fancyDie('The account name you supplied is invalid.');
+    }
+
+    if (trim($account['capcode']) != '') {
+        $_POST['name'] = "<b>" . $account['capcode'] . "</b>";
+    } else {
+        $_POST['name'] = "<b style='color:#f00'>$name</b>";
+    }
+
     $idcrypt = "<b>(capped)</b> ";
 
-    if ($level < 7500 && $setting[adminsonly] && $_POST[subj]) fancydie("You need a userlevel of 7500 to start a thread."); // admins-only threads...
-    if (!$_POST[subj] && !is_writable("$_POST[bbs]/dat/$_POST[id].dat")) {
-        if ($level < 6500) {
-            fancydie("You need a userlevel of 6500 to reply to this thread.");
+    if (intval($account['level'] < 7500 && $setting[adminsonly] && $_POST['subj'])) fancyDie("You need a userlevel of 7500 to start a thread."); // admins-only threads...
+    if (!$_POST['subj'] && !is_writable("$_POST[bbs]/dat/$_POST[id].dat")) {
+        if (intval($account['level']) < 6500) {
+            fancyDie("You need a userlevel of 6500 to reply to this thread.");
         }
         chmod("$_POST[bbs]/dat/$_POST[id].dat", 0666);
         $threadstopwhendone = true;
@@ -215,7 +195,7 @@ if ($_POST[pass]) {
 // ID hash 
     $idcrypt = " ";
     if ($setting[haship]) {
-        $idcrypt .= "ID: " . substr(base64_encode(pack("H*", sha1($_SERVER[REMOTE_ADDR] . date("d") . SecureSalt()))), 1, 8) . " ";
+        $idcrypt .= "ID: " . substr(base64_encode(pack("H*", sha1($_SERVER[REMOTE_ADDR] . date("d") . TEE_SALT))), 1, 8) . " ";
     }
 
 #### funky tripcode time ###########
@@ -236,18 +216,18 @@ if ($_POST[pass]) {
         }
 
         if ($sectrip != "") {
-            $sha = base64_encode(pack("H*", sha1($sectrip . SecureSalt())));
+            $sha = base64_encode(pack("H*", sha1($sectrip . TEE_SALT)));
             $sha = substr($sha, 0, 15);
             $trip .= "#" . $sha;
         }
     }
 # End of tripcode section #############################
 
-    if (strlen($_POST[name]) > 30) fancydie("Your name is too damn long!");
+    if (strlen($_POST[name]) > 30) fancyDie("Your name is too damn long!");
 // Certain things can only be done by admins.
-    if (strstr($_POST[icon], "..")) fancydie("When I say 'for admins only' I mean 'for admins only'!"); // admins-only icons...
-    if ($setting[adminsonly] && $_POST[subj]) fancydie("When I say 'for admins only' I mean 'for admins only'!"); // admins-only threads...
-    if (!$_POST[subj] && !is_writable("$_POST[bbs]/dat/$_POST[id].dat")) fancydie("You're not allowed to reply to this thread.<br>If you're making a new thread, <b>try entering a subject for it</b> DQN."); // threadstops
+    if (strstr($_POST[icon], "..")) fancyDie("When I say 'for admins only' I mean 'for admins only'!"); // admins-only icons...
+    if ($setting[adminsonly] && $_POST[subj]) fancyDie("When I say 'for admins only' I mean 'for admins only'!"); // admins-only threads...
+    if (!$_POST[subj] && !is_writable("$_POST[bbs]/dat/$_POST[id].dat")) fancyDie("You're not allowed to reply to this thread.<br>If you're making a new thread, <b>try entering a subject for it</b> DQN."); // threadstops
 } // End of non-capcodes-only section ####
 ##########################################
 
@@ -299,7 +279,7 @@ $_POST[mesg] = str_replace(array("\r\n", "\r", "\n"), "", $_POST[mesg]);
 
 
 // shiichan check
-if ($_POST[shiichan] != "proper") fancydie("Whoever told you to click here is a mean person. Please tell them off.");
+if ($_POST[shiichan] != "proper") fancyDie("Whoever told you to click here is a mean person. Please tell them off.");
 
 if ($_POST[subj]) {
     $_POST[sage] = "";
@@ -307,36 +287,26 @@ if ($_POST[subj]) {
 if ($_POST[sage]) $idcrypt .= "(sage)";
 
 // Length checks
-if (strlen($_POST[mesg]) == 0) fancydie("You didn't write a post?!");
-if (strlen($_POST[mesg]) > 10000) fancydie("Thanks for your contribution, but it was too large.");
-if (strlen($_POST[subj]) > 45) fancydie("Subject is too long!");
-if (count(explode("<br>", $_POST[mesg])) > 100) fancydie("Your post has far too many lines in it!");
+if (strlen($_POST[mesg]) == 0) fancyDie("You didn't write a post?!");
+if (strlen($_POST[mesg]) > 10000) fancyDie("Thanks for your contribution, but it was too large.");
+if (strlen($_POST[subj]) > 45) fancyDie("Subject is too long!");
+if (count(explode("<br>", $_POST[mesg])) > 100) fancyDie("Your post has far too many lines in it!");
 
 // check for ID and board
-if (!$_POST[bbs]) fancydie("No board specified to post to!");
-if (!$_POST[id]) fancydie("No thread ID specified to post to!");
-if (!is_dir($_POST[bbs])) fancydie("Board specified does not exist.");
-if (!$_POST[subj] && !is_file("$_POST[bbs]/dat/$_POST[id].dat")) fancydie("Thread ID specified does not exist.");
-if ($_POST[subj] && is_file("$_POST[bbs]/dat/$_POST[id].dat")) fancydie("Thread has already been created.");
+if (!$_POST[bbs]) fancyDie("No board specified to post to!");
+if (!$_POST[id]) fancyDie("No thread ID specified to post to!");
+if (!is_dir($_POST[bbs])) fancyDie("Board specified does not exist.");
+if (!$_POST[subj] && !is_file("$_POST[bbs]/dat/$_POST[id].dat")) fancyDie("Thread ID specified does not exist.");
+if ($_POST[subj] && is_file("$_POST[bbs]/dat/$_POST[id].dat")) fancyDie("Thread has already been created.");
 
-// Tripcode mohel
+// Tripcode mohel TODO: Encrypted trips are blocked?  Or not?
 if ($_POST[name]) {
-    $censorme = false;
-    if (file_exists("mohel.cgi")) {
-        $mohel = file("mohel.cgi") or fancydie("Couldn't open mohel.cgi :(");
-        foreach ($mohel as $line) {
-            $line = trim($line);
-            if ($line{0} == '#') {
-                if ($line == '#' . $trip) $censorme = true;
-            } else {
-                if ($line == $_POST[name] . '#' . $trip) $censorme = true;
-            }
-        }
-        if ($censorme == true) {
-            echo "<b>Message from Mohel:</b> Your nickname was censored, for your own good.<p>";
-            $_POST[name] = "";
-            $trip = '';
-        }
+    $censorme = checkMohel($_POST['name'], $trip);
+
+    if ($censorme == true) {
+        echo "<b>Message from Mohel:</b> Your nickname was censored, for your own good.<p>";
+        $_POST[name] = "";
+        $trip = '';
     }
 }
 
@@ -344,7 +314,7 @@ if ($_POST[name]) {
 if ($_POST[name] == "" && !$trip) $_POST[name] = $setting[nameless];
 
 // It's time to actually write the post.
-$handle = fopen("$_POST[bbs]/dat/$_POST[id].dat", "a") or fancydie("Couldn't open the thread .dat file for writing!");
+$handle = fopen("$_POST[bbs]/dat/$_POST[id].dat", "a") or fancyDie("Couldn't open the thread .dat file for writing!");
 $tobewritten = "$_POST[name]<>$trip<>$posttime<>$_POST[mesg]<>$idcrypt";
 $tobewritten = str_replace(array("\r\n", "\r", "\n"), "", $tobewritten); // do NOT allow linebreaks under penalty of fucking up the post!
 if ($_POST[subj]) {
@@ -367,7 +337,7 @@ fwrite($handle, $thisverysecond);
 fclose($handle);
 
 if ($_POST[subj]) {
-    $handle = fopen("$_POST[bbs]/subject.txt", "a") or fancydie("Couldn't open subject.txt for writing!");
+    $handle = fopen("$_POST[bbs]/subject.txt", "a") or fancyDie("Couldn't open subject.txt for writing!");
     $_POST[name] ? $namae = $_POST[name] : $namae = '#' . $trip;
     fwrite($handle, "$_POST[subj]<>$namae<>$_POST[icon]<>$_POST[id]<>0<>$namae<>$_POST[id]\n");
     fclose($handle);
@@ -377,9 +347,9 @@ if ($threadstopwhendone) chmod("$_POST[bbs]/dat/$_POST[id].dat", 0440);
 RebuildThreadList($_POST[bbs], $_POST[id], $_POST[sage], false);
 ?>
 <html><title>Success</title>
-<meta http-equiv='refresh' content='1;url=<?= $setting[urltoforum] ?><?= $_POST[bbs] ?>/'>
+    <meta http-equiv='refresh' content='1;url=<?= $setting[urltoforum] ?><?= $_POST[bbs] ?>/'>
 <? readfile("skin/$setting[skin]/success.txt"); ?>
-<br>
-<small><a href='<?= $setting[urltoforum] ?><?= $_POST[bbs] ?>/'>Click here to be forwarded manually</a></small>
-<hr>
-Powered by teechan v.<?php echo $teeversion;
+    <br>
+    <small><a href='<?= $setting[urltoforum] ?><?= $_POST[bbs] ?>/'>Click here to be forwarded manually</a></small>
+    <hr>
+    Powered by teechan v.<?php echo $teeversion;

@@ -3,30 +3,10 @@ $_SERVER['PATH_INFO'] = substr($_SERVER['REQUEST_URI'], 12);
 
 require "include.php";
 
-// Report fatal errors.
-function fancydie($m) {
-    global $teeversion; ?><title>Forums Fatal Error</title>
-    <style type="text/css">img {
-            float: right
-        }
-
-        * {
-            font-family: Tahoma, sans-serif
-        }
-
-        h1 {
-            border: 2px solid #faf;
-            background: #fdf;
-            font-size: medium
-        }</style>
-    <h1>Fatal error! Thread could not be fetched.</h1><?= $m ?>
-    <hr>Powered by teechan <?php echo $teeversion; exit;
-}
-
-if ($_SERVER[REQUEST_METHOD] != 'GET') fancydie('I POSTed your mom in the ass last night.');
+if ($_SERVER[REQUEST_METHOD] != 'GET') fancyDie('I POSTed your mom in the ass last night.');
 
 // settings file
-$glob = file("globalsettings.txt") or fancydie("Eh? Couldn't fetch the global settings file?!");
+$glob = file("globalsettings.txt") or fancyDie("Eh? Couldn't fetch the global settings file?!");
 foreach ($glob as $tmp) {
     $tmp = trim($tmp);
     list ($name, $value) = explode("=", $tmp);
@@ -56,9 +36,9 @@ if ($_SERVER[PATH_INFO]) {
 
 
 // some errors
-if (!$bbs) fancydie("You didn't specify a BBS.");
-if (!$key) fancydie("You didn't specify a thread to read.");
-if (!file_exists("$bbs/dat/$key.dat")) fancydie('That thread or board does not exist.');
+if (!$bbs) fancyDie("You didn't specify a BBS.");
+if (!$key) fancyDie("You didn't specify a thread to read.");
+if (!file_exists("$bbs/dat/$key.dat")) fancyDie('That thread or board does not exist.');
 
 // go for it!
 echo PrintThread($bbs, $key, $posts, true);
