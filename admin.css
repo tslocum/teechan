@@ -54,3 +54,11 @@ input[type="submit"]:hover {
 input[type="submit"]:active {
     background: #faa
 }
+
+#logo {
+    float: right;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    z-index: 999;
+}

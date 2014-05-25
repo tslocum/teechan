@@ -59,6 +59,14 @@ function fancyDie($m) {
     </tr></table><?php exit;
 }
 
+function linkToThread($board, $thread, $posts='') {
+    if (TEE_PRETTYURLS) {
+        return 'read.php/' . $board . '/' . $thread . '/' . $posts;
+    } else {
+        return 'read.php?b=' . $board . '&t=' . $thread . ($posts != '' ? ('&p=' . $posts) : '');
+    }
+}
+
 function teeHashPassword($password) {
     return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 }
@@ -229,7 +237,7 @@ function PrintPost($number, $name, $trip, $date, $id, $message, $postfile, $tid,
             $message .= array_shift($messy);
             $message .= "<br>";
         }
-        if ($messy) $message .= "<i>(<a href='read.php/$boardname/$tid/$number'>Post truncated.</a>)</i>";
+        if ($messy) $message .= "<i>(<a href='" . linkToThread($boardname, $tid, $number) . "'>Post truncated.</a>)</i>";
     }
     $post = str_replace("<%MESSAGE%>", $message, $post);
     return $post;
@@ -242,7 +250,7 @@ function PrintPages($numposts, $boardname, $threadid, $postsperpage) {
         $pc = $print . "-";
         $tmp = $postsperpage * $i;
         if ($tmp < $numposts) $pc .= $tmp;
-        $moot .= "<a href='read.php/$boardname/$threadid/$pc'>$print</a> ";
+        $moot .= "<a href='" . linkToThread($boardname, $threadid, $pc) . "'>$print</a> ";
     }
     return $moot . "</span>";
 }
@@ -279,7 +287,7 @@ function PrintThread($boardname, $threadid, $postarray, $isitreadphp) {
         $return = $top;
     } else {
         $top = file_get_contents("skin/$setting[skin]/smallthreadtop.txt");
-        $top = str_replace("<%THREADNAME%>", "<a name='$threadid' href='read.php/$boardname/$threadid/1-$setting[postsperpage]' class='unstyled'>$threadname</a>", $top);
+        $top = str_replace("<%THREADNAME%>", "<a name='$threadid' href='" . linkToThread($boardname, $threadid, "1-{$setting[postsperpage]}") . "' class='unstyled'>$threadname</a>", $top);
         $top = str_replace("<%STARTFORM%>", "<form name='post$postthing' action='post.php' method='POST'><input type='hidden' name='bbs' value='$boardname'><input type='hidden' name='id' value='$threadid'><input type='hidden' name='shiichan' value='proper'>", $top);
         $return = $top;
     }
@@ -293,7 +301,7 @@ function PrintThread($boardname, $threadid, $postarray, $isitreadphp) {
         # The latest replies are hidden... but gotta have skins!
         $hidden = file_get_contents("skin/$setting[skin]/hidden.txt");
         $hidden = str_replace("<%FEW%>", $setting[fpposts], $hidden);
-        $hidden = str_replace("<%READ%>", "read.php/$boardname/$threadid/1-$setting[postsperpage]", $hidden);
+        $hidden = str_replace("<%READ%>", linkToThread($boardname, $threadid, "1-{$setting[postsperpage]}"), $hidden);
         $return .= $hidden;
     }
 
@@ -332,8 +340,8 @@ function PrintThread($boardname, $threadid, $postarray, $isitreadphp) {
     } else $bottom = file_get_contents("skin/$setting[skin]/smallthreadbottom.txt");
     $bottom = str_replace("<%NUMPOSTS%>", $numposts + 1, $bottom);
     if (!is_writable("$boardname/dat/$threadid.dat")) $bottom = str_replace("<%TEXTAREA%>", "This thread is threadstopped. You can't reply anymore.", $bottom);
-    else if ($setting[namefield]) $bottom = str_replace("<%TEXTAREA%>", "<textarea rows='5' cols='64' name='mesg'></textarea><br><input type='submit' value='Add Reply'> Name <input name='name'> &nbsp;&nbsp;&nbsp; <input name='sage' type='checkbox'> Sage<br><a href='read.php/$boardname/$threadid/1-$setting[postsperpage]'>First Page</a> - <a href='read.php/$boardname/$threadid/l$setting[postsperpage]'>Last $setting[postsperpage]</a> - <a href='read.php/$boardname/$threadid/'>Entire Thread</a> - <a href='<%REPLYLINK%>' title='Advanced reply'>Advanced Reply</a>", $bottom);
-    else $bottom = str_replace("<%TEXTAREA%>", "<textarea rows='5' cols='64' name='mesg'></textarea><br><input type='submit' value='Add Reply'> &nbsp; <input name='sage' type='checkbox'> Sage<br><br><a href='read.php/$boardname/$threadid/'>Entire Thread</a> - <a href='read.php/$boardname/$threadid/1-$setting[postsperpage]'>First Page</a> - <a href='read.php/$boardname/$threadid/l$setting[postsperpage]'>Last $setting[postsperpage]</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <small><a href='<%REPLYLINK%>' title='Advanced reply'>Advanced Reply</a></small>", $bottom);
+    else if ($setting[namefield]) $bottom = str_replace("<%TEXTAREA%>", "<textarea rows='5' cols='64' name='mesg'></textarea><br><input type='submit' value='Add Reply'> Name <input name='name'> &nbsp;&nbsp;&nbsp; <input name='sage' type='checkbox'> Sage<br><a href='" . linkToThread($boardname, $threadid, "1-{$setting[postsperpage]}") . "'>First Page</a> - <a href='" . linkToThread($boardname, $threadid, "l{$setting[postsperpage]}") . "'>Last $setting[postsperpage]</a> - <a href='" . linkToThread($boardname, $threadid) . "'>Entire Thread</a> - <a href='<%REPLYLINK%>' title='Advanced reply'>Advanced Reply</a>", $bottom);
+    else $bottom = str_replace("<%TEXTAREA%>", "<textarea rows='5' cols='64' name='mesg'></textarea><br><input type='submit' value='Add Reply'> &nbsp; <input name='sage' type='checkbox'> Sage<br><br><a href='" . linkToThread($boardname, $threadid) . "'>Entire Thread</a> - <a href='" . linkToThread($boardname, $threadid, "1-{$setting[postsperpage]}") . "'>First Page</a> - <a href='" . linkToThread($boardname, $threadid, "l{$setting[postsperpage]}") . "'>Last $setting[postsperpage]</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <small><a href='<%REPLYLINK%>' title='Advanced reply'>Advanced Reply</a></small>", $bottom);
 
     $bottom = str_replace("<%REPLYLINK%>", "post.php?id=$threadid&amp;bbs=$boardname", $bottom);
     $bottom = str_replace("<%ADMINLINK%>", "<a href='admin.php?task=manage&amp;bbs=$boardname&amp;tid=$threadid&amp;st=$start&amp;ed=$end'>Manage</a>", $bottom);
@@ -396,20 +404,20 @@ function RebuildThreadList($bbs, $thisid, $sage, $rmthread) {
             $icon = icons($i, $threadicon);
             $pages = ceil($replies / $setting[postsperpage]);
             $last = ($pages - 1) * $setting[postsperpage];
-            fputs($f, "<tr><td><a href='read.php/$bbs/$id/'>$icon</a> </td><td><a href='$bbs/#$id'>$threadname</a>");
+            fputs($f, "<tr><td><a href='" . linkToThread($bbs, $id) . "'>$icon</a> </td><td><a href='$bbs/#$id'>$threadname</a>");
             if ($pages > 1) {
                 fputs($f, " ( ");
                 for ($j = 0; $j < $pages && $j < 7; $j++) {
                     $jam = $j * $setting[postsperpage] + 1;
                     $jelly = $jam - 1 + $setting[postsperpage];
-                    fputs($f, "<a href='read.php/$bbs/$id/$jam-$jelly'>$jam</a> ");
+                    fputs($f, "<a href='" . linkToThread($bbs, $id, "$jam-$jelly") . "'>$jam</a> ");
                 }
                 if ($pages > 6) {
-                    fputs($f, "... <a href='read.php/$bbs/$id/$last-'>Last page</a> ");
+                    fputs($f, "... <a href='" . linkToThread($bbs, $id, "$last-") . "'>Last page</a> ");
                 }
                 fputs($f, ")");
             }
-            fputs($f, "</td><td>$author</td><td>$replies</td><td nowrap><small><a href='read.php/$bbs/$id/$last-'>$time</a></small></td></tr>");
+            fputs($f, "</td><td>$author</td><td>$replies</td><td nowrap><small><a href='" . linkToThread($bbs, $id, "$last-") . "'>$time</a></small></td></tr>");
         }
 
         for ($i = $setting[fpthreads]; $i < $setting[fpthreads] + $setting[additionalthreads]; $i++) {
@@ -417,7 +425,7 @@ function RebuildThreadList($bbs, $thisid, $sage, $rmthread) {
             list ($threadname, $author, $threadicon, $id, $replies, $last, $lasttime) = explode("<>", $subject[$i]);
             $time = date("y/m/d(D)H:i:s", $lasttime);
             $icon = icons($i, $threadicon);
-            fputs($f, "<tr><td><a href='read.php/$bbs/$id/1-$setting[postsperpage]'>$icon</a></td><td><a href='read.php/$bbs/$id/l$setting[postsperpage]'>$threadname</a></td><td>$author</td><td>$replies</td><td nowrap><small>$time</small></td></tr>");
+            fputs($f, "<tr><td><a href='" . linkToThread($bbs, $id, "1-{$setting[postsperpage]}") . "'>$icon</a></td><td><a href='" . linkToThread($bbs, $id, "l{$setting[postsperpage]}") . "'>$threadname</a></td><td>$author</td><td>$replies</td><td nowrap><small>$time</small></td></tr>");
         }
     }
 
@@ -436,4 +444,21 @@ function RebuildThreadList($bbs, $thisid, $sage, $rmthread) {
     $bottom = str_replace("<%TEEVERSION%>", $teeversion, $bottom);
     fputs($f, $bottom);
     fclose($f);
+}
+
+function _anchorLink($matches) {
+    global $al_bbs, $al_thread;
+
+    $trailing_comma = false;
+    if (substr($matches[0], -1) == ',') {
+        $trailing_comma = true;
+        $matches[0] = substr($matches[0], 0, -1);
+        $matches[1] = substr($matches[1], 0, -1);
+    }
+
+    return '<a href="' . linkToThread($al_bbs, $al_thread, $matches[1]) . '">' . $matches[0] . '</a>' . ($trailing_comma ? ',' : '');
+}
+
+function anchorLink($message) {
+    return preg_replace_callback('/&gt;&gt;([\d,lqr-]+)/', '_anchorLink', $message);
 }

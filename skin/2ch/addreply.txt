@@ -6,7 +6,7 @@ v=eval("document."+a+".mesg"); v.value+=">>"+b+"\n"; v.focus() }</script>
 <base href="<%FORUMURL%>">
 <body class="board">
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#CCFFCC" align="center" class="mono"><tr><td>
-<b><a href="/bbs/12/">Carpe Diem</a> &gt; <a href="read.php/<%BOARDURL%>/<%THREADID%>/"><%THREADNAME%></a> &gt; Add Reply</b><br><br>
+<b><a href="<%FORUMURL%>/<%BOARDURL%>"><%BOARDNAME%></a> &gt; <a href="<%THREADLINK%>"><%THREADNAME%></a> &gt; Add Reply</b><br><br>
 <table>
 <%STARTFORM%>
 <tr><th>Name</th><th align="left"><input name="name" size="20" <%NAMECOOKIE%>></th>

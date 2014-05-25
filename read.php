@@ -1,9 +1,17 @@
 <?php
-$_SERVER['PATH_INFO'] = substr($_SERVER['REQUEST_URI'], 12);
 
 require "include.php";
 
 if ($_SERVER[REQUEST_METHOD] != 'GET') fancyDie('I POSTed your mom in the ass last night.');
+
+if (isset($_GET['b']) && isset($_GET['t'])) {
+    $request = 'read.php/' . (isset($_GET['b']) ? $_GET['b'] : '') . '/' . (isset($_GET['t']) ? $_GET['t'] : '') . '/' . (isset($_GET['p']) ? $_GET['p'] : '');
+} else {
+    $file_pos = strrpos($_SERVER['REQUEST_URI'], 'read.php');
+    if ($file_pos === false) fancyDie('Unable to read your request!');
+
+    $request = substr($_SERVER['REQUEST_URI'], $file_pos);
+}
 
 // settings file
 $glob = file("globalsettings.txt") or fancyDie("Eh? Couldn't fetch the global settings file?!");
@@ -13,8 +21,8 @@ foreach ($glob as $tmp) {
     $setting[$name] = $value;
 }
 
-if ($_SERVER[PATH_INFO]) {
-    $pairs = explode('/', $_SERVER[PATH_INFO]);
+if ($request != '') {
+    $pairs = explode('/', $request);
     $bbs = $pairs[1];
     $local = @file("$bbs/localsettings.txt");
     if ($local) {

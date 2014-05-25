@@ -94,6 +94,7 @@ if ($_GET[id]) {
     $html = str_replace("<%FORUMNAME%>", $setting[forumname], $html);
     $html = str_replace("<%BOARDURL%>", $_GET[bbs], $html);
     $html = str_replace("<%THREADID%>", $_GET[id], $html);
+    $html = str_replace("<%THREADLINK%>", linkToThread($_GET['bbs'], $_GET['id']), $html);
     $html = str_replace("<%FORUMURL%>", $setting[urltoforum], $html);
     $html = str_replace("<%BOARDNAME%>", $setting[boardname], $html);
     $html = str_replace("<%STARTFORM%>", "<form name='post' action='post.php' method='POST'><input type='hidden' name='bbs' value='$_GET[bbs]'><input type='hidden' name='id' value='$_GET[id]'><input type='hidden' name='shiichan' value='proper'>", $html);
@@ -232,10 +233,9 @@ if ($_POST['pass']) {
 ##########################################
 
 //// anchor >>1 links
-//$_POST[mesg] = preg_replace("/&gt;&gt;([0-9,\-]+)/", "<a href=\"read.php/$_POST[bbs]/$_POST[id]/$1\">&gt;&gt;$1</a>", $_POST[mesg]);
-$_POST[mesg] = preg_replace("/&gt;&gt;([\d,lqr-]+),/", "<a href=\"read.php/$_POST[bbs]/$_POST[id]/$1\">>>$1</a>,", $_POST[mesg]);
-$_POST[mesg] = preg_replace("/&gt;&gt;([\d,lqr-]+)/", "<a href=\"read.php/$_POST[bbs]/$_POST[id]/$1\">&gt;&gt;$1</a>", $_POST[mesg]);
-
+$al_bbs = $_POST['bbs'];
+$al_thread = $_POST['id'];
+$_POST['mesg'] = anchorLink($_POST['mesg']);
 
 // linebreaks
 $_POST[name] = str_replace(array("\r\n", "\r", "\n"), " ", $_POST[name]);
