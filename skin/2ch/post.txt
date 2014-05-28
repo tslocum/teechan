@@ -1,1 +1,1 @@
-<dt><span class="mono"><%NUMBER%> <%ID%> <font color="green"><b><%NAME%></b><%TRIP%></font> <%DATE%></span><dd><%MESSAGE%>
+<dt><span class="mono"><%NUMBER%> <font color="green"><b><%NAME%></b><%TRIP%></font> <%ID%> <%DATE%></span><dd><%MESSAGE%>

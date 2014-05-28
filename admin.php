@@ -309,7 +309,8 @@ EOF;
         if ($_POST[posticons]) fputs($fp, "posticons=$_POST[posticons]\n");
         if ($_POST[additionalthreads]) fputs($fp, "additionalthreads=$_POST[additionalthreads]\n");
         if ($_POST[overrideskin]) fputs($fp, "overrideskin=on\nskin=$_POST[skin]\n");
-        if ($_POST[adminsonly]) fputs($fp, "adminsonly=$_POST[adminsonly]");
+        if ($_POST[adminsonly]) fputs($fp, "adminsonly=$_POST[adminsonly]\n");
+        if ($_POST[neverbump]) fputs($fp, "neverbump=$_POST[neverbump]\n");
         fclose($fp);
         ?>
         <link rel="stylesheet" href="admin.css"><h1>Success</h1>
@@ -876,6 +877,8 @@ switch ($_GET[task]) {
                 } ?></select> (Override?) <input name="overrideskin" <?= $SETTING[overrideskin] ?> type="checkbox">
             <br>Board name: <input name="boardname" value="<?= $SETTING[boardname] ?>">
             <br>Threads can only be started by admins? <input name="adminsonly" <?= $SETTING[adminsonly] ?>
+                                                              type="checkbox">
+            <br>Threads are never bumped? <input name="neverbump" <?= $SETTING[neverbump] ?>
                                                               type="checkbox">
 
             <h2>Default names</h2>

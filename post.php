@@ -31,7 +31,11 @@ if ($local) foreach ($local as $tmp) {
 }
 
 // mrvacbob 04-2009
-if ($_POST[subj]) $_POST[id] = $thisverysecond;
+$isnewthread = false;
+if ($_POST[subj]) {
+	$_POST[id] = $thisverysecond;
+	$isnewthread = true;
+}
 
 // If we're getting called to write a post, go for it.
 if ($_GET[shiichan] == "writenew") {
@@ -344,7 +348,7 @@ if ($_POST[subj]) {
 }
 
 if ($threadstopwhendone) chmod("$_POST[bbs]/dat/$_POST[id].dat", 0440);
-RebuildThreadList($_POST[bbs], $_POST[id], $_POST[sage], false);
+RebuildThreadList($_POST[bbs], $_POST[id], ($setting[neverbump] && !$isnewthread ? true : $_POST[sage]), false);
 ?>
 <html><title>Success</title>
     <meta http-equiv='refresh' content='1;url=<?= $setting[urltoforum] ?><?= $_POST[bbs] ?>/'>
