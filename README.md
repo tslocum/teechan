@@ -13,8 +13,8 @@ This software is currently under development.  Join #sriracha on irc.1chan.us if
 Original copyright
 ------------
 
-Shiichan
-Copyright (C) 2004-2009 Shii
+Shiichan  
+Copyright (C) 2004-2009 Shii  
 Portions copyright (C) 2004-2009 Alexander Strange (MrVacBob)
 
 This program is free software: you can redistribute it and/or modify
